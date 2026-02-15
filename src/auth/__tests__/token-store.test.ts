@@ -9,10 +9,16 @@ vi.mock("node:fs", () => ({
   chmodSync: vi.fn(),
 }));
 
-// Mock node:os
-vi.mock("node:os", () => ({
-  homedir: vi.fn(() => "/mock-home"),
-}));
+// Mock node:os — must include hostname and userInfo for encryption key derivation
+vi.mock("node:os", async (importOriginal) => {
+  const original = await importOriginal<typeof import("node:os")>();
+  return {
+    ...original,
+    homedir: vi.fn(() => "/mock-home"),
+    hostname: vi.fn(() => "mock-host"),
+    userInfo: vi.fn(() => ({ username: "mock-user" })),
+  };
+});
 
 import { readFileSync, writeFileSync, mkdirSync, chmodSync } from "node:fs";
 import { loadTokensFromDisk, saveTokensToDisk } from "../token-store.js";
@@ -23,7 +29,7 @@ const mockedMkdirSync = vi.mocked(mkdirSync);
 const mockedChmodSync = vi.mocked(chmodSync);
 
 describe("loadTokensFromDisk", () => {
-  it("returns tokens when config.json has valid JWT auth", () => {
+  it("returns tokens from legacy plaintext config and auto-migrates", () => {
     const futureDate = new Date(Date.now() + 3600_000).toISOString();
     mockedReadFileSync.mockReturnValue(
       JSON.stringify({
@@ -42,6 +48,9 @@ describe("loadTokensFromDisk", () => {
       refreshToken: "refresh-token-1",
       expiresAt: new Date(futureDate).getTime(),
     });
+
+    // Auto-migration should have triggered a save
+    expect(mockedWriteFileSync).toHaveBeenCalled();
   });
 
   it("returns undefined when file does not exist", () => {
@@ -147,7 +156,7 @@ describe("saveTokensToDisk", () => {
     expiresAt: 1700000000000,
   };
 
-  it("creates config dir and writes config file", () => {
+  it("creates config dir and writes encrypted config file", () => {
     // No existing config file
     mockedReadFileSync.mockImplementation(() => {
       throw new Error("ENOENT");
@@ -172,12 +181,15 @@ describe("saveTokensToDisk", () => {
     const written = JSON.parse(
       mockedWriteFileSync.mock.calls[0][1] as string,
     );
-    expect(written.auth).toEqual({
-      type: "jwt",
-      token: "new-access",
-      refreshToken: "new-refresh",
-      expiresAt: new Date(1700000000000).toISOString(),
-    });
+    // Should use encrypted format, NOT plaintext
+    expect(written.auth).toBeUndefined();
+    expect(written.auth_encrypted).toBeDefined();
+    expect(typeof written.auth_encrypted).toBe("string");
+    // Encrypted format: base64(iv):base64(tag):base64(ciphertext)
+    expect(written.auth_encrypted.split(":")).toHaveLength(3);
+    // Should NOT contain plaintext tokens
+    expect(written.auth_encrypted).not.toContain("new-access");
+    expect(written.auth_encrypted).not.toContain("new-refresh");
   });
 
   it("merges into existing config preserving other fields", () => {
@@ -192,10 +204,12 @@ describe("saveTokensToDisk", () => {
     );
     expect(written.projects).toEqual(["p1"]);
     expect(written.supabaseUrl).toBe("https://example.com");
-    expect(written.auth.type).toBe("jwt");
+    expect(written.auth_encrypted).toBeDefined();
+    // Legacy plaintext field should be removed
+    expect(written.auth).toBeUndefined();
   });
 
-  it("overwrites existing auth section", () => {
+  it("removes legacy plaintext auth when saving", () => {
     mockedReadFileSync.mockReturnValue(
       JSON.stringify({
         auth: { type: "jwt", token: "old", refreshToken: "old", expiresAt: "old" },
@@ -207,7 +221,8 @@ describe("saveTokensToDisk", () => {
     const written = JSON.parse(
       mockedWriteFileSync.mock.calls[0][1] as string,
     );
-    expect(written.auth.token).toBe("new-access");
+    expect(written.auth).toBeUndefined();
+    expect(written.auth_encrypted).toBeDefined();
   });
 
   it("handles write errors gracefully by logging to stderr", () => {
@@ -231,10 +246,37 @@ describe("saveTokensToDisk", () => {
 
     saveTokensToDisk(tokens);
 
-    // Should still write successfully with just auth
+    // Should still write successfully with encrypted auth
     const written = JSON.parse(
       mockedWriteFileSync.mock.calls[0][1] as string,
     );
-    expect(written.auth.token).toBe("new-access");
+    expect(written.auth_encrypted).toBeDefined();
+    expect(written.auth).toBeUndefined();
+  });
+});
+
+describe("Encrypted token round-trip", () => {
+  it("can load tokens that were saved in encrypted format", () => {
+    // First save — capture what gets written
+    mockedReadFileSync.mockImplementation(() => {
+      throw new Error("ENOENT");
+    });
+
+    const tokens: OAuthTokens = {
+      accessToken: "roundtrip-access",
+      refreshToken: "roundtrip-refresh",
+      expiresAt: Date.now() + 3600_000,
+    };
+
+    saveTokensToDisk(tokens);
+
+    // Now mock readFileSync to return what was written
+    const savedContent = mockedWriteFileSync.mock.calls[0][1] as string;
+    mockedReadFileSync.mockReturnValue(savedContent);
+
+    const loaded = loadTokensFromDisk();
+    expect(loaded).toBeDefined();
+    expect(loaded!.accessToken).toBe("roundtrip-access");
+    expect(loaded!.refreshToken).toBe("roundtrip-refresh");
   });
 });

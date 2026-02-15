@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { z } from "zod";
 import { createMockServer } from "./_helpers.js";
 
 vi.mock("../../client/ulink-api.js", () => ({
@@ -276,4 +277,42 @@ describe("Link tools", () => {
       expect(result.isError).toBe(true);
     });
   });
+});
+
+// ---------------------------------------------------------------------------
+// Link URL validation (security fix)
+// ---------------------------------------------------------------------------
+describe("Link URL HTTPS validation", () => {
+  const urlSchema = z
+    .string()
+    .url()
+    .startsWith("https://", { message: "URL must use HTTPS" });
+
+  const validUrls = [
+    "https://example.com",
+    "https://example.com/path?query=value",
+    "https://apps.apple.com/app/myapp/id123456789",
+    "https://play.google.com/store/apps/details?id=com.example.app",
+  ];
+
+  for (const url of validUrls) {
+    it(`accepts valid HTTPS URL "${url}"`, () => {
+      expect(urlSchema.parse(url)).toBe(url);
+    });
+  }
+
+  const invalidUrls: Array<[string, string]> = [
+    ["http://example.com", "HTTP not HTTPS"],
+    ["javascript:alert('xss')", "javascript URI"],
+    ["data:text/html,<script>alert('xss')</script>", "data URI"],
+    ["file:///etc/passwd", "file URI"],
+    ["ftp://example.com/file", "FTP URI"],
+    ["not-a-url", "not a URL"],
+  ];
+
+  for (const [url, reason] of invalidUrls) {
+    it(`rejects invalid URL "${url}" (${reason})`, () => {
+      expect(() => urlSchema.parse(url)).toThrow();
+    });
+  }
 });

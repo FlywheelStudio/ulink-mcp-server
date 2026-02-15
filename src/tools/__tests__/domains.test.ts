@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { z } from "zod";
 import { createMockServer } from "./_helpers.js";
 
 vi.mock("../../client/ulink-api.js", () => ({
@@ -135,4 +136,50 @@ describe("Domain tools", () => {
       expect(result.isError).toBe(true);
     });
   });
+});
+
+// ---------------------------------------------------------------------------
+// Hostname validation (security fix)
+// ---------------------------------------------------------------------------
+describe("add_domain hostname validation", () => {
+  const hostnameSchema = z
+    .string()
+    .regex(
+      /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i,
+      "Invalid domain hostname",
+    );
+
+  const validHostnames = [
+    "example.com",
+    "links.example.com",
+    "my-app.example.co.uk",
+    "sub.domain.example.com",
+    "a.io",
+    "UPPERCASE.COM",
+  ];
+
+  for (const hostname of validHostnames) {
+    it(`accepts valid hostname "${hostname}"`, () => {
+      expect(hostnameSchema.parse(hostname)).toBe(hostname);
+    });
+  }
+
+  const invalidHostnames: Array<[string, string]> = [
+    ["192.168.1.1", "IP address"],
+    ["localhost", "no TLD"],
+    ["user:pass@example.com", "credentials in URL"],
+    ["-example.com", "starts with hyphen"],
+    ["javascript:alert(1)", "javascript URI"],
+    ["data:text/html,hi", "data URI"],
+    ["file:///etc/passwd", "file URI"],
+    ["", "empty string"],
+    ["example.c", "single-char TLD"],
+    ["http://example.com", "contains scheme"],
+  ];
+
+  for (const [hostname, reason] of invalidHostnames) {
+    it(`rejects invalid hostname "${hostname}" (${reason})`, () => {
+      expect(() => hostnameSchema.parse(hostname)).toThrow();
+    });
+  }
 });

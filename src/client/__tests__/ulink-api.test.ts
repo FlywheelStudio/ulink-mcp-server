@@ -262,16 +262,16 @@ describe("apiRequest", () => {
     expect(result).toBeUndefined();
   });
 
-  it("throws ApiError with message from response body", async () => {
+  it("throws ApiError with safe message for 404 (not backend details)", async () => {
     mockedGetApiKey.mockReturnValue("key");
     mockFetch.mockResolvedValue({
       ok: false,
       status: 404,
-      json: async () => ({ message: "Project not found" }),
+      json: async () => ({ message: "Project xyz not found in database table" }),
     });
 
     await expect(apiRequest("GET", "/projects/999")).rejects.toThrow(
-      "Project not found",
+      "Resource not found",
     );
 
     try {
@@ -279,23 +279,64 @@ describe("apiRequest", () => {
     } catch (err) {
       expect(err).toBeInstanceOf(ApiError);
       expect((err as InstanceType<typeof ApiError>).status).toBe(404);
+      // Should NOT contain backend details
+      expect((err as Error).message).not.toContain("database table");
     }
   });
 
-  it("throws ApiError with default message when response body has no message", async () => {
+  it("passes through validation messages for 422", async () => {
+    mockedGetApiKey.mockReturnValue("key");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 422,
+      json: async () => ({ message: "slug must be at least 3 characters" }),
+    });
+
+    await expect(apiRequest("GET", "/test")).rejects.toThrow(
+      "slug must be at least 3 characters",
+    );
+  });
+
+  it("returns safe message for 401", async () => {
+    mockedGetApiKey.mockReturnValue("key");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ message: "JWT expired: token is no longer valid" }),
+    });
+
+    await expect(apiRequest("GET", "/test")).rejects.toThrow(
+      "Authentication failed",
+    );
+  });
+
+  it("returns safe message for 403", async () => {
+    mockedGetApiKey.mockReturnValue("key");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 403,
+      json: async () => ({ message: "User abc123 does not have access" }),
+    });
+
+    await expect(apiRequest("GET", "/test")).rejects.toThrow(
+      "Access denied",
+    );
+  });
+
+  it("returns generic message for unknown status codes", async () => {
     mockedGetApiKey.mockReturnValue("key");
     mockFetch.mockResolvedValue({
       ok: false,
       status: 500,
-      json: async () => ({}),
+      json: async () => ({ message: "NullPointerException at DatabaseService.java:42" }),
     });
 
     await expect(apiRequest("GET", "/test")).rejects.toThrow(
-      "API request failed: 500",
+      "Request failed (500)",
     );
   });
 
-  it("throws ApiError with default message when response body is not JSON", async () => {
+  it("returns generic message when response body is not JSON", async () => {
     mockedGetApiKey.mockReturnValue("key");
     mockFetch.mockResolvedValue({
       ok: false,
@@ -306,7 +347,7 @@ describe("apiRequest", () => {
     });
 
     await expect(apiRequest("GET", "/test")).rejects.toThrow(
-      "API request failed: 502",
+      "Request failed (502)",
     );
   });
 });
