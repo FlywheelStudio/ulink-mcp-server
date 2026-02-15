@@ -47,7 +47,7 @@ cd "$MCP_DIR"
 npm version "$NEW_VERSION" --no-git-tag-version --quiet
 npm run build --silent
 npm test --silent
-git add package.json
+git add package.json package-lock.json
 git commit -m "chore: bump version to $NEW_VERSION"
 git tag "v$NEW_VERSION"
 echo "    Committed and tagged v$NEW_VERSION"
@@ -59,16 +59,20 @@ cd "$SETUP_DIR"
 sed -i '' "s/@ulinkly\/mcp-server@[0-9]*\.[0-9]*\.[0-9]*/@ulinkly\/mcp-server@$NEW_VERSION/g" bin/lib.mjs
 # Update SKILL.md
 sed -i '' "s/@ulinkly\/mcp-server@[0-9]*\.[0-9]*\.[0-9]*/@ulinkly\/mcp-server@$NEW_VERSION/g" skills/setup-ulink/SKILL.md
+# Update README.md
+sed -i '' "s/@ulinkly\/mcp-server@[0-9]*\.[0-9]*\.[0-9]*/@ulinkly\/mcp-server@$NEW_VERSION/g" README.md
+# Update .mcp.json
+sed -i '' "s/@ulinkly\/mcp-server@[0-9]*\.[0-9]*\.[0-9]*/@ulinkly\/mcp-server@$NEW_VERSION/g" .mcp.json
 
-# Verify the update
-FOUND=$(grep -r "@ulinkly/mcp-server@" bin/ skills/ | grep -v "$NEW_VERSION" || true)
+# Verify the update — scan all files that reference the MCP server version
+FOUND=$(grep -r "@ulinkly/mcp-server@" bin/ skills/ README.md .mcp.json | grep -v "$NEW_VERSION" || true)
 if [[ -n "$FOUND" ]]; then
   echo "Error: Some references were not updated:"
   echo "$FOUND"
   exit 1
 fi
 
-git add bin/lib.mjs skills/setup-ulink/SKILL.md
+git add bin/lib.mjs skills/setup-ulink/SKILL.md README.md .mcp.json
 git commit -m "chore: update pinned MCP server version to $NEW_VERSION"
 echo "    Committed AI setup update"
 
@@ -85,5 +89,4 @@ echo "    AI setup pushed"
 
 echo ""
 echo "Done! MCP server v$NEW_VERSION released and all references updated."
-echo ""
-echo "Next: publish to npm with 'cd ulink_mcp_server && npm publish'"
+echo "GitHub Actions will publish to npm on the tag push."
