@@ -48,13 +48,24 @@ h1{color:#22c55e;margin:0 0 .5rem}p{color:#555}</style></head>
 <body><div class="card"><h1>Authenticated</h1><p>You can close this window and return to your terminal.</p></div></body></html>`;
 }
 
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  };
+  return text.replace(/[&<>"']/g, (ch) => map[ch]);
+}
+
 function errorHtml(message: string): string {
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>ULink CLI — Error</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fafafa}
 .card{text-align:center;padding:2rem;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 h1{color:#ef4444;margin:0 0 .5rem}p{color:#555}</style></head>
-<body><div class="card"><h1>Authentication Error</h1><p>${message}</p></div></body></html>`;
+<body><div class="card"><h1>Authentication Error</h1><p>${escapeHtml(message)}</p></div></body></html>`;
 }
 
 // ---------------------------------------------------------------------------

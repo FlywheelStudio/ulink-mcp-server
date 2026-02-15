@@ -72,6 +72,7 @@ export function registerProjectTools(server: McpServer): void {
         defaultUrl: z
           .string()
           .url()
+          .startsWith("https://", { message: "URL must use HTTPS" })
           .describe("Default fallback URL used when no platform-specific URL matches"),
       },
     },
@@ -102,7 +103,7 @@ export function registerProjectTools(server: McpServer): void {
       inputSchema: {
         projectId: z.string().uuid().describe("The unique identifier of the project to update"),
         name: z.string().optional().describe("New name for the project"),
-        defaultUrl: z.string().url().optional().describe("New default fallback URL"),
+        defaultUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("New default fallback URL"),
       },
     },
     async ({ projectId, name, defaultUrl }) => {
