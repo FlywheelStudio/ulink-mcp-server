@@ -23,7 +23,7 @@ describe("API Key tools", () => {
   // list_api_keys
   // ---------------------------------------------------------------------------
   describe("list_api_keys", () => {
-    it("calls GET /api-keys?projectId=:id", async () => {
+    it("calls GET /api-keys?projectId=:id with encoded projectId", async () => {
       const keys = [{ id: "k1", name: "Production" }];
       mockedApiRequest.mockResolvedValue(keys);
 
@@ -32,7 +32,7 @@ describe("API Key tools", () => {
 
       expect(mockedApiRequest).toHaveBeenCalledWith(
         "GET",
-        "/api-keys?projectId=p1",
+        `/api-keys?projectId=${encodeURIComponent("p1")}`,
       );
       expect(result.content[0].text).toBe(JSON.stringify(keys, null, 2));
     });
@@ -44,6 +44,16 @@ describe("API Key tools", () => {
       const result = await handler({ projectId: "p1" });
 
       expect(result.isError).toBe(true);
+    });
+
+    it("handles non-Error thrown values gracefully", async () => {
+      mockedApiRequest.mockRejectedValue("string error");
+
+      const handler = getHandler("list_api_keys");
+      const result = await handler({ projectId: "p1" });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain("string error");
     });
   });
 

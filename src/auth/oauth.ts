@@ -15,6 +15,12 @@ const FRONTEND_URL =
 const SUPABASE_URL =
   process.env.ULINK_SUPABASE_URL ?? "https://cjgihassfsspxivjtgoi.supabase.co";
 
+if (!SUPABASE_URL.startsWith("https://")) {
+  throw new Error(
+    "ULINK_SUPABASE_URL must use HTTPS to protect tokens in transit",
+  );
+}
+
 const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 
 // ---------------------------------------------------------------------------
@@ -215,8 +221,7 @@ export async function refreshAccessToken(
   });
 
   if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Token refresh failed (${res.status}): ${body}`);
+    throw new Error(`Token refresh failed (${res.status})`);
   }
 
   const data = (await res.json()) as {

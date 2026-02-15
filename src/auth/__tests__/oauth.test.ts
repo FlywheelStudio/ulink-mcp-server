@@ -1,5 +1,29 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
+// ---------------------------------------------------------------------------
+// SUPABASE_URL HTTPS enforcement
+// ---------------------------------------------------------------------------
+describe("SUPABASE_URL HTTPS enforcement", () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it("rejects HTTP SUPABASE_URL at module load", async () => {
+    process.env.ULINK_SUPABASE_URL = "http://evil.com";
+    await expect(import("../oauth.js")).rejects.toThrow(
+      "ULINK_SUPABASE_URL must use HTTPS",
+    );
+    delete process.env.ULINK_SUPABASE_URL;
+  });
+
+  it("accepts HTTPS SUPABASE_URL", async () => {
+    process.env.ULINK_SUPABASE_URL = "https://custom.supabase.co";
+    const mod = await import("../oauth.js");
+    expect(mod.refreshAccessToken).toBeDefined();
+    delete process.env.ULINK_SUPABASE_URL;
+  });
+});
+
 describe("refreshAccessToken", () => {
   const mockFetch = vi.fn();
 
@@ -96,18 +120,24 @@ describe("refreshAccessToken", () => {
     );
   });
 
-  it("throws on non-ok response", async () => {
+  it("throws on non-ok response with safe message (no response body leaked)", async () => {
     const refreshAccessToken = await getRefreshAccessToken();
 
     mockFetch.mockResolvedValue({
       ok: false,
       status: 401,
-      text: async () => "Unauthorized",
     });
 
     await expect(refreshAccessToken("bad-token")).rejects.toThrow(
-      "Token refresh failed (401): Unauthorized",
+      "Token refresh failed (401)",
     );
+    // Verify the error does NOT include response body details
+    try {
+      await refreshAccessToken("bad-token");
+    } catch (err) {
+      expect((err as Error).message).not.toContain("Unauthorized");
+      expect((err as Error).message).not.toContain("JWT");
+    }
   });
 
   it("throws with status code in error message", async () => {

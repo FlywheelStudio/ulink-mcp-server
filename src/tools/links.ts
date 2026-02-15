@@ -65,7 +65,7 @@ export function registerLinkTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
@@ -113,7 +113,7 @@ export function registerLinkTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
@@ -142,7 +142,7 @@ export function registerLinkTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
@@ -200,7 +200,7 @@ export function registerLinkTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
@@ -234,7 +234,7 @@ export function registerLinkTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
@@ -272,7 +272,7 @@ export function registerLinkTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }

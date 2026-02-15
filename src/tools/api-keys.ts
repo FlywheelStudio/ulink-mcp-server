@@ -21,14 +21,14 @@ export function registerApiKeyTools(server: McpServer): void {
       try {
         const data = await apiRequest(
           "GET",
-          `/api-keys?projectId=${projectId}`,
+          `/api-keys?projectId=${encodeURIComponent(projectId)}`,
         );
         return {
           content: [{ type: "text", text: JSON.stringify(data, null, 2) }],
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
@@ -61,7 +61,7 @@ export function registerApiKeyTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
@@ -95,7 +95,7 @@ export function registerApiKeyTools(server: McpServer): void {
         };
       } catch (err) {
         return {
-          content: [{ type: "text", text: `Error: ${(err as any).message}` }],
+          content: [{ type: "text", text: `Error: ${err instanceof Error ? err.message : String(err)}` }],
           isError: true,
         };
       }
