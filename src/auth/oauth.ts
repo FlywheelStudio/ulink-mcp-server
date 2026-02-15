@@ -1,6 +1,6 @@
 import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { URL } from "node:url";
 
 export interface OAuthTokens {
@@ -59,12 +59,12 @@ export function openBrowser(url: string): void {
   const platform = process.platform;
   try {
     if (platform === "darwin") {
-      execSync(`open "${url}"`);
+      execFileSync("open", [url]);
     } else if (platform === "win32") {
-      execSync(`start "" "${url}"`);
+      execFileSync("cmd", ["/c", "start", "", url]);
     } else {
       // Linux / other
-      execSync(`xdg-open "${url}"`);
+      execFileSync("xdg-open", [url]);
     }
   } catch {
     console.error(`Could not open browser. Please visit:\n${url}`);
