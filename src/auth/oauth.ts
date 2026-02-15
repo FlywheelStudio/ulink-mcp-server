@@ -59,12 +59,12 @@ export function openBrowser(url: string): void {
   const platform = process.platform;
   try {
     if (platform === "darwin") {
-      execFileSync("open", [url]);
+      execFileSync("open", [url], { stdio: "ignore" });
     } else if (platform === "win32") {
-      execFileSync("cmd", ["/c", "start", "", url]);
+      execFileSync("cmd", ["/c", "start", "", url], { stdio: "ignore" });
     } else {
       // Linux / other
-      execFileSync("xdg-open", [url]);
+      execFileSync("xdg-open", [url], { stdio: "ignore" });
     }
   } catch {
     console.error(`Could not open browser. Please visit:\n${url}`);
