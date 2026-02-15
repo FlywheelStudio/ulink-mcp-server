@@ -43,7 +43,13 @@ export function registerDomainTools(server: McpServer): void {
         "Add a custom domain to a ULink project. After adding, you must configure DNS records and verify the domain before it can be used for links.",
       inputSchema: {
         projectId: z.string().uuid().describe("The project to add the domain to"),
-        host: z.string().describe("The domain hostname to add (e.g. links.example.com)"),
+        host: z
+          .string()
+          .regex(
+            /^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,}$/i,
+            "Invalid domain hostname"
+          )
+          .describe("The domain hostname to add (e.g. links.example.com)"),
       },
     },
     async ({ projectId, host }) => {

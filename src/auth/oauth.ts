@@ -83,6 +83,9 @@ export function browserOAuthFlow(): Promise<OAuthTokens> {
 
     let settled = false;
 
+    let callbackAttempts = 0;
+    const MAX_CALLBACK_ATTEMPTS = 5;
+
     const server = createServer((req: IncomingMessage, res: ServerResponse) => {
       if (!req.url) {
         res.writeHead(400);
@@ -95,6 +98,22 @@ export function browserOAuthFlow(): Promise<OAuthTokens> {
       if (parsed.pathname !== "/callback") {
         res.writeHead(404);
         res.end("Not found");
+        return;
+      }
+
+      // Rate limit callback attempts
+      callbackAttempts++;
+      if (callbackAttempts > MAX_CALLBACK_ATTEMPTS) {
+        res.writeHead(429, { "Content-Type": "text/html" });
+        res.end(errorHtml("Too many callback attempts"));
+        return;
+      }
+
+      // Validate session ID to prevent CSRF
+      const returnedSession = parsed.searchParams.get("session");
+      if (returnedSession !== sessionId) {
+        res.writeHead(400, { "Content-Type": "text/html" });
+        res.end(errorHtml("Invalid session — possible CSRF attempt"));
         return;
       }
 
@@ -155,7 +174,7 @@ export function browserOAuthFlow(): Promise<OAuthTokens> {
         `&callback_port=${port}` +
         `&source=mcp`;
 
-      console.error(`Opening browser for authentication...\n${authUrl}`);
+      console.error(`Opening browser for authentication on localhost:${port}...`);
       openBrowser(authUrl);
     });
 
