@@ -20,15 +20,15 @@ export function registerLinkTools(server: McpServer): void {
           .describe("Link type: 'unified' for smart routing or 'dynamic' for parameterised deep links"),
         slug: z.string().optional().describe("Custom slug for the short URL (auto-generated if omitted)"),
         name: z.string().optional().describe("Human-readable name for the link"),
-        iosUrl: z.string().optional().describe("URL to open on iOS devices"),
-        androidUrl: z.string().optional().describe("URL to open on Android devices"),
-        fallbackUrl: z.string().optional().describe("Fallback URL for unsupported platforms"),
+        iosUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("URL to open on iOS devices"),
+        androidUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("URL to open on Android devices"),
+        fallbackUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("Fallback URL for unsupported platforms"),
         iosFallbackUrl: z
-          .string()
+          .string().url().startsWith("https://", { message: "URL must use HTTPS" })
           .optional()
           .describe("iOS-specific fallback URL (e.g. App Store link)"),
         androidFallbackUrl: z
-          .string()
+          .string().url().startsWith("https://", { message: "URL must use HTTPS" })
           .optional()
           .describe("Android-specific fallback URL (e.g. Play Store link)"),
         parameters: z
@@ -161,15 +161,15 @@ export function registerLinkTools(server: McpServer): void {
       inputSchema: {
         linkId: z.string().uuid().describe("The unique identifier of the link to update"),
         name: z.string().optional().describe("New human-readable name for the link"),
-        iosUrl: z.string().optional().describe("New URL to open on iOS devices"),
-        androidUrl: z.string().optional().describe("New URL to open on Android devices"),
-        fallbackUrl: z.string().optional().describe("New fallback URL for unsupported platforms"),
+        iosUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("New URL to open on iOS devices"),
+        androidUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("New URL to open on Android devices"),
+        fallbackUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("New fallback URL for unsupported platforms"),
         iosFallbackUrl: z
-          .string()
+          .string().url().startsWith("https://", { message: "URL must use HTTPS" })
           .optional()
           .describe("New iOS-specific fallback URL"),
         androidFallbackUrl: z
-          .string()
+          .string().url().startsWith("https://", { message: "URL must use HTTPS" })
           .optional()
           .describe("New Android-specific fallback URL"),
         parameters: z
