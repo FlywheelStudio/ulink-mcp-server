@@ -140,9 +140,6 @@ The following ULink tools are available to the LLM, organized by category.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `ULINK_API_KEY` | — | API key for authentication (skips browser OAuth flow) |
-| `ULINK_API_URL` | `https://api.ulink.ly` | Base URL for the ULink REST API |
-| `ULINK_FRONTEND_URL` | `https://ulink.ly` | Frontend URL used for the OAuth login flow |
-| `ULINK_SUPABASE_ANON_KEY` | *(embedded)* | Override the built-in Supabase anon key for token refresh |
 
 ## Requirements
 
