@@ -15,6 +15,11 @@
     "dev": "tsc --watch",
     "prepare": "npm run build"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FlywheelStudio/ulink-mcp-server"
+  },
+  "license": "MIT",
   "engines": {
     "node": ">=18"
   },
