@@ -1,6 +1,6 @@
 {
   "name": "@ulinkly/mcp-server",
-  "version": "0.1.11",
+  "version": "0.1.12",
   "description": "ULink MCP Server — Model Context Protocol server for the ULink REST API",
   "type": "module",
   "bin": {
