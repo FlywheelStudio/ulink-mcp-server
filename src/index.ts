@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { registerProjectTools } from "./tools/projects.js";
@@ -8,9 +11,12 @@ import { registerDomainTools } from "./tools/domains.js";
 import { registerApiKeyTools } from "./tools/api-keys.js";
 import { registerAccountTools } from "./tools/account.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const packageJson = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"));
+
 const server = new McpServer({
   name: "ulink",
-  version: "0.1.0",
+  version: String(packageJson.version),
 });
 
 registerProjectTools(server);
