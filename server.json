@@ -6,12 +6,12 @@
     "url": "https://github.com/FlywheelStudio/ulink-mcp-server",
     "source": "github"
   },
-  "version": "0.1.14",
+  "version": "0.1.15",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "@ulinkly/mcp-server",
-      "version": "0.1.14",
+      "version": "0.1.15",
       "transport": {
         "type": "stdio"
       },
