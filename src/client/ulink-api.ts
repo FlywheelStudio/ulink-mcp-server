@@ -114,6 +114,7 @@ export async function apiRequest<T>(
 
   const headers: Record<string, string> = {
     [auth.header]: auth.value,
+    "X-ULink-Source": "mcp_server",
   };
 
   if (body !== undefined) {
