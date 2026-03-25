@@ -113,6 +113,39 @@ export function loadTokensFromDisk(): OAuthTokens | undefined {
 }
 
 /**
+ * Load just the refresh token from ~/.ulink/config.json, ignoring access token expiry.
+ * Used by check_auth_status to attempt token refresh when access token is expired.
+ * Returns undefined if no config, no auth, or no refresh token found.
+ */
+export function loadRefreshTokenFromDisk(): string | undefined {
+  try {
+    const raw = readFileSync(CONFIG_PATH, "utf-8");
+    const config = JSON.parse(raw) as Record<string, unknown>;
+
+    // Try encrypted format first
+    if (typeof config.auth_encrypted === "string") {
+      try {
+        const decrypted = decrypt(config.auth_encrypted);
+        const auth = JSON.parse(decrypted) as CliAuthSection;
+        return auth.refreshToken || undefined;
+      } catch {
+        // Decryption failed — fall through to legacy
+      }
+    }
+
+    // Legacy plaintext format
+    const auth = config.auth as CliAuthSection | undefined;
+    if (auth?.refreshToken) {
+      return auth.refreshToken;
+    }
+
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+/**
  * Persist OAuthTokens to ~/.ulink/config.json using encrypted storage.
  * Preserves projects, supabaseUrl, supabaseAnonKey and all other fields.
  * Removes legacy plaintext auth section on save.
