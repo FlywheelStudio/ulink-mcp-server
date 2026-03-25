@@ -10,6 +10,7 @@ import { registerLinkTools } from "./tools/links.js";
 import { registerDomainTools } from "./tools/domains.js";
 import { registerApiKeyTools } from "./tools/api-keys.js";
 import { registerAccountTools } from "./tools/account.js";
+import { registerAuthTools } from "./tools/auth.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const packageJson = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"));
@@ -19,6 +20,7 @@ const server = new McpServer({
   version: String(packageJson.version),
 });
 
+registerAuthTools(server);
 registerProjectTools(server);
 registerLinkTools(server);
 registerDomainTools(server);
@@ -28,7 +30,7 @@ registerAccountTools(server);
 async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  console.error("ULink MCP Server running on stdio (21 tools registered)");
+  console.error("ULink MCP Server running on stdio (24 tools registered)");
 }
 
 main().catch((error) => {
