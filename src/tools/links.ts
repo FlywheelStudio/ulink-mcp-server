@@ -11,7 +11,7 @@ export function registerLinkTools(server: McpServer): void {
     {
       title: "Create Link",
       description:
-        "Create a new smart link in a ULink project. Supports unified links (single URL that routes by platform) and dynamic links (parameterised deep links). You must specify the project, domain, and link type. Optionally set platform-specific URLs, fallback URLs, custom slug, metadata, and parameters. Use the optional externalId field to make link creation idempotent — repeated calls with the same externalId return the existing link instead of duplicating.",
+        "Create a new smart link in a ULink project. Supports unified links (single URL that routes by platform) and dynamic links (parameterised deep links). You must specify the project, domain, and link type. Optionally set platform-specific URLs, fallback URLs, custom slug, metadata, and parameters. Pass externalId (any stable string from your system) to make creation idempotent on (project, externalId).",
       inputSchema: {
         projectId: z.string().uuid().describe("The project to create the link in"),
         domainId: z.string().uuid().describe("The domain to host the link on"),
@@ -20,13 +20,7 @@ export function registerLinkTools(server: McpServer): void {
           .describe("Link type: 'unified' for smart routing or 'dynamic' for parameterised deep links"),
         slug: z.string().optional().describe("Custom slug for the short URL (auto-generated if omitted)"),
         name: z.string().optional().describe("Human-readable name for the link"),
-        externalId: z
-          .string()
-          .min(1)
-          .max(255)
-          .regex(/^\S+$/, "externalId must not contain whitespace")
-          .optional()
-          .describe("Optional stable identifier from your system (e.g. 'share:user-123:post-456'). When set, repeated calls with the same (project, externalId) return the existing link instead of creating a duplicate. Idempotent — eliminates duplicate-link bloat in analytics."),
+        externalId: z.string().min(1).max(255).regex(/^\S+$/, "externalId must not contain whitespace").optional().describe("Optional stable identifier from your system (e.g. 'share:user-123:post-456'). Repeated calls with the same (project, externalId) return the existing link instead of creating a duplicate. Idempotent."),
         iosUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("URL to open on iOS devices"),
         androidUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("URL to open on Android devices"),
         fallbackUrl: z.string().url().startsWith("https://", { message: "URL must use HTTPS" }).optional().describe("Fallback URL for unsupported platforms"),
