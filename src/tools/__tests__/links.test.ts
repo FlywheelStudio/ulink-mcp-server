@@ -92,6 +92,42 @@ describe("Link tools", () => {
       expect(result.isError).toBe(true);
       expect(result.content[0].text).toContain("Quota exceeded");
     });
+
+    it("forwards externalId to the API body when provided", async () => {
+      mockedApiRequest.mockResolvedValue({ id: "link-1", slug: "abc" });
+
+      const handler = getHandler("create_link");
+      await handler({
+        projectId: "00000000-0000-0000-0000-000000000001",
+        domainId: "00000000-0000-0000-0000-000000000002",
+        type: "unified",
+        iosUrl: "https://apps.apple.com/app/123",
+        androidUrl: "https://play.google.com/store/apps/details?id=com.example",
+        externalId: "share:user:123:post:456",
+      });
+
+      expect(mockedApiRequest).toHaveBeenCalledWith(
+        "POST",
+        expect.stringContaining("/api/v1/projects/"),
+        expect.objectContaining({ externalId: "share:user:123:post:456" }),
+      );
+    });
+
+    it("omits externalId from the API body when not provided (backward compat)", async () => {
+      mockedApiRequest.mockResolvedValue({ id: "link-1" });
+
+      const handler = getHandler("create_link");
+      await handler({
+        projectId: "00000000-0000-0000-0000-000000000001",
+        domainId: "00000000-0000-0000-0000-000000000002",
+        type: "unified",
+        iosUrl: "https://apps.apple.com/app/123",
+        androidUrl: "https://play.google.com/store/apps/details?id=com.example",
+      });
+
+      const [, , body] = mockedApiRequest.mock.calls[0];
+      expect(body).not.toHaveProperty("externalId");
+    });
   });
 
   // ---------------------------------------------------------------------------
