@@ -40,9 +40,13 @@ export function registerLinkTools(server: McpServer): void {
           .record(z.unknown())
           .optional()
           .describe("Arbitrary metadata attached to the link"),
+        allowQueryPassthrough: z
+          .boolean()
+          .optional()
+          .describe("When true, query params appended to this link (e.g. ?orderId=123) are passed to the app and OVERRIDE stored parameters with the same name. Applies on app open and after deferred install."),
       },
     },
-    async ({ projectId, domainId, type, slug, name, externalId, iosUrl, androidUrl, fallbackUrl, iosFallbackUrl, androidFallbackUrl, parameters, metadata }) => {
+    async ({ projectId, domainId, type, slug, name, externalId, iosUrl, androidUrl, fallbackUrl, iosFallbackUrl, androidFallbackUrl, parameters, metadata, allowQueryPassthrough }) => {
       try {
         const body: Record<string, unknown> = { type };
         if (slug !== undefined) body.slug = slug;
@@ -55,6 +59,7 @@ export function registerLinkTools(server: McpServer): void {
         if (androidFallbackUrl !== undefined) body.androidFallbackUrl = androidFallbackUrl;
         if (parameters !== undefined) body.parameters = parameters;
         if (metadata !== undefined) body.metadata = metadata;
+        if (allowQueryPassthrough !== undefined) body.allowQueryPassthrough = allowQueryPassthrough;
 
         const qs = domainId ? `?domainId=${encodeURIComponent(domainId)}` : "";
         const data = await apiRequest(
@@ -182,9 +187,13 @@ export function registerLinkTools(server: McpServer): void {
           .record(z.unknown())
           .optional()
           .describe("New arbitrary metadata attached to the link"),
+        allowQueryPassthrough: z
+          .boolean()
+          .optional()
+          .describe("New value: when true, query params appended to this link are passed to the app and OVERRIDE stored parameters with the same name."),
       },
     },
-    async ({ linkId, name, iosUrl, androidUrl, fallbackUrl, iosFallbackUrl, androidFallbackUrl, parameters, metadata }) => {
+    async ({ linkId, name, iosUrl, androidUrl, fallbackUrl, iosFallbackUrl, androidFallbackUrl, parameters, metadata, allowQueryPassthrough }) => {
       try {
         const body: Record<string, unknown> = {};
         if (name !== undefined) body.name = name;
@@ -195,6 +204,7 @@ export function registerLinkTools(server: McpServer): void {
         if (androidFallbackUrl !== undefined) body.androidFallbackUrl = androidFallbackUrl;
         if (parameters !== undefined) body.parameters = parameters;
         if (metadata !== undefined) body.metadata = metadata;
+        if (allowQueryPassthrough !== undefined) body.allowQueryPassthrough = allowQueryPassthrough;
 
         const data = await apiRequest("PUT", `/api/v1/links/${linkId}`, body);
         return {
