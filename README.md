@@ -109,12 +109,18 @@ The following ULink tools are available to the LLM, organized by category.
 
 #### Link Management
 
-- `create_link`: Creates a unified or dynamic smart link with platform-specific URLs, parameters, and metadata.
+- `create_link`: Creates a unified or dynamic smart link with platform-specific URLs, parameters, and metadata. Supports `allowQueryPassthrough` (see below).
 - `list_links`: Lists all links in a project with pagination.
 - `get_link`: Gets detailed information about a specific link.
-- `update_link`: Updates a link's URLs, parameters, or metadata.
+- `update_link`: Updates a link's URLs, parameters, or metadata. Supports `allowQueryPassthrough` (see below).
 - `delete_link`: Permanently deletes a link. This is irreversible.
 - `get_link_analytics`: Gets click analytics for a link, including total clicks and breakdowns by platform, country, and referrer.
+
+##### Query Passthrough
+
+Both `create_link` and `update_link` accept an `allowQueryPassthrough` boolean field (default: `false`). When enabled, query parameters appended to the link URL at click time (e.g. `https://go.example.com/abc?orderId=123&ref=email`) are merged into the resolved link's `parameters` and **override** any stored parameter with the same key. Parameter values always arrive as strings. The feature works on both immediate app open and after a deferred install — no SDK change is required.
+
+Validation rules for passthrough parameters: keys must match `[A-Za-z0-9_-]{1,64}`, a maximum of 25 parameters are allowed, each value must be ≤ 1 024 characters, the total payload must be ≤ 4 KB, and the key `debug` is reserved.
 
 #### Domain Management
 

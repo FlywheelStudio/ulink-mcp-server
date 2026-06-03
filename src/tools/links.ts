@@ -43,7 +43,7 @@ export function registerLinkTools(server: McpServer): void {
         allowQueryPassthrough: z
           .boolean()
           .optional()
-          .describe("When true, query params appended to this link (e.g. ?orderId=123) are passed to the app and OVERRIDE stored parameters with the same name. Applies on app open and after deferred install."),
+          .describe("When true, query params appended to this link URL at click time (e.g. ?orderId=123) are merged into the resolved link's parameters and OVERRIDE stored parameters with the same key. Parameter values arrive as strings. Applies on both immediate app open and after deferred install. No SDK change required. Default: false."),
       },
     },
     async ({ projectId, domainId, type, slug, name, externalId, iosUrl, androidUrl, fallbackUrl, iosFallbackUrl, androidFallbackUrl, parameters, metadata, allowQueryPassthrough }) => {
@@ -190,7 +190,7 @@ export function registerLinkTools(server: McpServer): void {
         allowQueryPassthrough: z
           .boolean()
           .optional()
-          .describe("New value: when true, query params appended to this link are passed to the app and OVERRIDE stored parameters with the same name."),
+          .describe("When true, query params appended to this link URL at click time (e.g. ?orderId=123) are merged into the resolved link's parameters and OVERRIDE stored parameters with the same key. Parameter values arrive as strings. Applies on both immediate app open and after deferred install. No SDK change required."),
       },
     },
     async ({ linkId, name, iosUrl, androidUrl, fallbackUrl, iosFallbackUrl, androidFallbackUrl, parameters, metadata, allowQueryPassthrough }) => {
