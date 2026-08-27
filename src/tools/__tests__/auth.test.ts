@@ -182,6 +182,51 @@ describe("Auth tools", () => {
       expect(parsed.message).toContain("Successfully authenticated");
     });
 
+    it("surfaces the auth URL and does not block when the browser cannot open", async () => {
+      mockedGetApiKey.mockReturnValue(undefined);
+      mockedLoadTokensFromDisk.mockReturnValue(undefined);
+      const url = "https://ulink.ly/auth/cli?session=abc&source=mcp";
+      // Browser could not open (opened=false); the flow keeps waiting and
+      // never settles during the test.
+      mockedBrowserOAuthFlow.mockImplementation((onAuthUrl?: (u: string, o: boolean) => void) => {
+        onAuthUrl?.(url, false);
+        return new Promise(() => {});
+      });
+
+      const handler = getHandler("authenticate");
+      const result = await handler({});
+
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.authenticated).toBe(false);
+      expect(parsed.authUrl).toBe(url);
+      expect(result.content[0].text).toContain(url);
+      expect(result.isError).toBeFalsy();
+      // Tokens are saved only once the background flow completes, not yet.
+      expect(mockedSaveTokensToDisk).not.toHaveBeenCalled();
+    });
+
+    it("blocks and returns success when the browser opens", async () => {
+      mockedGetApiKey.mockReturnValue(undefined);
+      mockedLoadTokensFromDisk.mockReturnValue(undefined);
+      const tokens = {
+        accessToken: "new-access",
+        refreshToken: "new-refresh",
+        expiresAt: Date.now() + 3600_000,
+      };
+      mockedBrowserOAuthFlow.mockImplementation((onAuthUrl?: (u: string, o: boolean) => void) => {
+        onAuthUrl?.("https://ulink.ly/auth/cli?session=xyz&source=mcp", true);
+        return Promise.resolve(tokens);
+      });
+
+      const handler = getHandler("authenticate");
+      const result = await handler({});
+
+      expect(mockedSaveTokensToDisk).toHaveBeenCalledWith(tokens);
+      const parsed = JSON.parse(result.content[0].text);
+      expect(parsed.authenticated).toBe(true);
+      expect(parsed.message).toContain("Successfully authenticated");
+    });
+
     it("returns error when OAuth times out", async () => {
       mockedGetApiKey.mockReturnValue(undefined);
       mockedLoadTokensFromDisk.mockReturnValue(undefined);

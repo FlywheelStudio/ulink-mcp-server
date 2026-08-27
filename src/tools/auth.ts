@@ -105,7 +105,7 @@ export function registerAuthTools(server: McpServer): void {
     {
       title: "Authenticate",
       description:
-        "Authenticate with ULink by opening a browser window for sign-in or sign-up. No existing account required — new users can create a free account during this flow. This is the first tool to call if check_auth_status reports no valid credentials. After success, all other ULink tools become usable.",
+        "Authenticate with ULink by opening a browser window for sign-in or sign-up. No existing account required — new users can create a free account during this flow. This is the first tool to call if check_auth_status reports no valid credentials. If a browser cannot be opened automatically, the response includes an 'authUrl' — present it to the user as a clickable link to open manually, then continue. After success, all other ULink tools become usable.",
       annotations: { readOnlyHint: false },
       inputSchema: {},
     },
@@ -140,8 +140,63 @@ export function registerAuthTools(server: McpServer): void {
           };
         }
 
-        // 3. Run browser OAuth flow
-        const tokens = await browserOAuthFlow();
+        // 3. Run browser OAuth flow.
+        //
+        // The flow opens a browser and then waits for a loopback callback.
+        // On machines where a browser cannot be launched (headless, SSH, no
+        // default browser), that wait would otherwise block silently for 5
+        // minutes with nothing the user can act on, because this server's
+        // stderr is not shown by most MCP clients. So we detect that case and
+        // hand the URL back in the response instead, while the flow keeps
+        // listening in the background — the next tool call picks up the saved
+        // tokens once the user finishes in their browser.
+        let authUrl: string | undefined;
+        let browserOpened = false;
+        let signalUrlReady: () => void;
+        const urlReady = new Promise<void>((resolve) => {
+          signalUrlReady = resolve;
+        });
+
+        const flow = browserOAuthFlow((url, opened) => {
+          authUrl = url;
+          browserOpened = opened;
+          signalUrlReady();
+        });
+
+        // Wait until either the URL is known (server listening) or the flow
+        // settles first (e.g. it failed to bind the loopback server).
+        const settledEarly = await Promise.race([
+          urlReady.then(() => false),
+          flow.then(
+            () => true,
+            () => true,
+          ),
+        ]);
+
+        if (!settledEarly && !browserOpened && authUrl) {
+          // Browser could not be opened — surface the URL and keep listening.
+          flow
+            .then((tokens) => saveTokensToDisk(tokens))
+            .catch(() => {
+              // Timed out or was denied; the user can call authenticate again.
+            });
+
+          return {
+            content: [{
+              type: "text",
+              text: JSON.stringify({
+                authenticated: false,
+                authUrl,
+                message:
+                  "Could not open a browser automatically. Open this URL to finish signing in, then ask me to continue:\n" +
+                  authUrl,
+              }),
+            }],
+          };
+        }
+
+        // Browser opened (or the flow already settled): wait for completion.
+        const tokens = await flow;
         saveTokensToDisk(tokens);
 
         return {
