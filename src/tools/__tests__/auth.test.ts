@@ -227,6 +227,58 @@ describe("Auth tools", () => {
       expect(parsed.message).toContain("Successfully authenticated");
     });
 
+    it("saves tokens when the background flow completes after the browser fallback", async () => {
+      mockedGetApiKey.mockReturnValue(undefined);
+      mockedLoadTokensFromDisk.mockReturnValue(undefined);
+      const url = "https://ulink.ly/auth/cli?session=def&source=mcp";
+      const tokens = {
+        accessToken: "bg-access",
+        refreshToken: "bg-refresh",
+        expiresAt: Date.now() + 3600_000,
+      };
+      let resolveFlow!: (t: typeof tokens) => void;
+      mockedBrowserOAuthFlow.mockImplementation((onAuthUrl?: (u: string, o: boolean) => void) => {
+        onAuthUrl?.(url, false);
+        return new Promise((resolve) => {
+          resolveFlow = resolve as (t: typeof tokens) => void;
+        });
+      });
+
+      const handler = getHandler("authenticate");
+      const result = await handler({});
+      expect(JSON.parse(result.content[0].text).authenticated).toBe(false);
+      expect(mockedSaveTokensToDisk).not.toHaveBeenCalled();
+
+      // User finishes in the browser later; the background flow resolves.
+      resolveFlow(tokens);
+      await vi.waitFor(() =>
+        expect(mockedSaveTokensToDisk).toHaveBeenCalledWith(tokens),
+      );
+    });
+
+    it("swallows a background flow rejection without saving tokens", async () => {
+      mockedGetApiKey.mockReturnValue(undefined);
+      mockedLoadTokensFromDisk.mockReturnValue(undefined);
+      const url = "https://ulink.ly/auth/cli?session=ghi&source=mcp";
+      let rejectFlow!: (e: Error) => void;
+      mockedBrowserOAuthFlow.mockImplementation((onAuthUrl?: (u: string, o: boolean) => void) => {
+        onAuthUrl?.(url, false);
+        return new Promise((_resolve, reject) => {
+          rejectFlow = reject;
+        });
+      });
+
+      const handler = getHandler("authenticate");
+      const result = await handler({});
+      expect(JSON.parse(result.content[0].text).authenticated).toBe(false);
+
+      // Later the flow times out / is denied — the .catch must swallow it.
+      rejectFlow(new Error("OAuth flow timed out after 5 minutes"));
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(mockedSaveTokensToDisk).not.toHaveBeenCalled();
+    });
+
     it("returns error when OAuth times out", async () => {
       mockedGetApiKey.mockReturnValue(undefined);
       mockedLoadTokensFromDisk.mockReturnValue(undefined);
