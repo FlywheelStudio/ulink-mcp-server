@@ -108,34 +108,15 @@ describe("apiRequest", () => {
     );
   });
 
-  it("triggers browser OAuth flow when no API key and no disk tokens", async () => {
+  it("throws not-authenticated (without launching the browser) when no API key and no disk tokens", async () => {
     mockedGetApiKey.mockReturnValue(undefined);
     mockedLoadTokensFromDisk.mockReturnValue(undefined);
-    const freshTokens: OAuthTokens = {
-      accessToken: "browser-token",
-      refreshToken: "browser-refresh",
-      expiresAt: Date.now() + 3600_000,
-    };
-    mockedBrowserOAuthFlow.mockResolvedValue(freshTokens);
 
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({}),
-    });
+    await expect(apiRequest("GET", "/test")).rejects.toThrow("Not authenticated");
 
-    await apiRequest("GET", "/test");
-
-    expect(mockedBrowserOAuthFlow).toHaveBeenCalled();
-    expect(mockedSaveTokensToDisk).toHaveBeenCalledWith(freshTokens);
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: "Bearer browser-token",
-        }),
-      }),
-    );
+    // Data tools must never launch the browser flow — that is authenticate's job.
+    expect(mockedBrowserOAuthFlow).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("auto-refreshes tokens when near expiry", async () => {
@@ -175,7 +156,7 @@ describe("apiRequest", () => {
     );
   });
 
-  it("falls back to browser flow when refresh fails", async () => {
+  it("throws not-authenticated (without launching the browser) when token refresh fails", async () => {
     mockedGetApiKey.mockReturnValue(undefined);
     const nearExpiryTokens: OAuthTokens = {
       accessToken: "old",
@@ -185,33 +166,10 @@ describe("apiRequest", () => {
     mockedLoadTokensFromDisk.mockReturnValue(nearExpiryTokens);
     mockedRefreshAccessToken.mockRejectedValue(new Error("refresh failed"));
 
-    const browserTokens: OAuthTokens = {
-      accessToken: "browser-fallback",
-      refreshToken: "browser-refresh-fallback",
-      expiresAt: Date.now() + 3600_000,
-    };
-    mockedBrowserOAuthFlow.mockResolvedValue(browserTokens);
+    await expect(apiRequest("GET", "/test")).rejects.toThrow("Not authenticated");
 
-    mockFetch.mockResolvedValue({
-      ok: true,
-      status: 200,
-      json: async () => ({}),
-    });
-
-    // Suppress console.error for "Token refresh failed"
-    vi.spyOn(console, "error").mockImplementation(() => {});
-
-    await apiRequest("GET", "/test");
-
-    expect(mockedBrowserOAuthFlow).toHaveBeenCalled();
-    expect(mockFetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        headers: expect.objectContaining({
-          Authorization: "Bearer browser-fallback",
-        }),
-      }),
-    );
+    expect(mockedBrowserOAuthFlow).not.toHaveBeenCalled();
+    expect(mockFetch).not.toHaveBeenCalled();
   });
 
   it("sends Content-Type header and body for POST requests", async () => {

@@ -72,7 +72,7 @@ h1{color:#ef4444;margin:0 0 .5rem}p{color:#555}</style></head>
 // Browser opener
 // ---------------------------------------------------------------------------
 
-export function openBrowser(url: string): void {
+export function openBrowser(url: string): boolean {
   const platform = process.platform;
   try {
     if (platform === "darwin") {
@@ -83,8 +83,10 @@ export function openBrowser(url: string): void {
       // Linux / other
       execFileSync("xdg-open", [url], { stdio: "ignore" });
     }
+    return true;
   } catch {
     console.error(`Could not open browser. Please visit:\n${url}`);
+    return false;
   }
 }
 
@@ -92,7 +94,18 @@ export function openBrowser(url: string): void {
 // Browser OAuth PKCE flow
 // ---------------------------------------------------------------------------
 
-export function browserOAuthFlow(): Promise<OAuthTokens> {
+/**
+ * Runs the loopback + PKCE browser OAuth flow.
+ *
+ * @param onAuthUrl Optional callback invoked once the loopback server is
+ * listening and the auth URL is known. `opened` reports whether a browser was
+ * actually launched — when it is `false` (headless, SSH, no default browser),
+ * the caller should surface the URL to the user so they can open it manually,
+ * since this server's stderr is not visible in most MCP clients.
+ */
+export function browserOAuthFlow(
+  onAuthUrl?: (url: string, opened: boolean) => void,
+): Promise<OAuthTokens> {
   return new Promise((resolve, reject) => {
     const sessionId = randomUUID();
     const codeVerifier = generateCodeVerifier();
@@ -192,7 +205,8 @@ export function browserOAuthFlow(): Promise<OAuthTokens> {
         `&source=mcp`;
 
       console.error(`Opening browser for authentication on localhost:${port}...`);
-      openBrowser(authUrl);
+      const opened = openBrowser(authUrl);
+      onAuthUrl?.(authUrl, opened);
     });
 
     // 5-minute timeout

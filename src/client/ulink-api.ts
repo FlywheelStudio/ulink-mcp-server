@@ -1,10 +1,12 @@
 import { getApiKey } from "../auth/api-key.js";
-import {
-  browserOAuthFlow,
-  refreshAccessToken,
-  type OAuthTokens,
-} from "../auth/oauth.js";
+import { refreshAccessToken, type OAuthTokens } from "../auth/oauth.js";
 import { loadTokensFromDisk, saveTokensToDisk } from "../auth/token-store.js";
+
+// Shown when a data tool is used without valid credentials. Data tools never
+// launch the browser flow themselves — the `authenticate` tool is the single
+// interactive entry point — so this message routes the model there.
+const NOT_AUTHENTICATED_MESSAGE =
+  "Not authenticated. Call the 'authenticate' tool to sign in (it opens a browser, or returns a sign-in URL when a browser cannot be opened), then retry.";
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -74,25 +76,27 @@ async function ensureAuth(): Promise<{ header: string; value: string }> {
     return { header: "x-app-key", value: apiKey };
   }
 
-  // 2. OAuth — try disk first, then browser
+  // 2. OAuth — use cached tokens only. Never launch the browser flow from a
+  //    data tool: that would either pop a surprise browser or, on a headless
+  //    machine, block silently with no URL the user can act on. Sign-in is the
+  //    `authenticate` tool's job.
   if (!oauthTokens) {
     oauthTokens = loadTokensFromDisk();
   }
   if (!oauthTokens) {
-    oauthTokens = await browserOAuthFlow();
-    saveTokensToDisk(oauthTokens);
+    throw new Error(NOT_AUTHENTICATED_MESSAGE);
   }
 
-  // 3. Auto-refresh if token expires within 30 s
+  // 3. Auto-refresh if token expires within the buffer.
   if (oauthTokens.expiresAt - Date.now() < TOKEN_REFRESH_BUFFER_MS) {
     try {
       oauthTokens = await refreshAccessToken(oauthTokens.refreshToken);
       saveTokensToDisk(oauthTokens);
     } catch {
-      // Refresh failed — re-authenticate via browser
-      console.error("Token refresh failed, re-authenticating...");
-      oauthTokens = await browserOAuthFlow();
-      saveTokensToDisk(oauthTokens);
+      // Refresh failed — require an explicit re-authentication rather than
+      // silently launching the browser flow here.
+      oauthTokens = undefined;
+      throw new Error(NOT_AUTHENTICATED_MESSAGE);
     }
   }
 
