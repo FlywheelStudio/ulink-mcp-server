@@ -317,6 +317,22 @@ describe("apiRequest", () => {
     await expect(apiRequest("GET", "/api-keys")).rejects.toThrow("HTTP 400");
   });
 
+  it("surfaces the server message for conflicts (409) with the status", async () => {
+    mockedGetApiKey.mockReturnValue("key");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 409,
+      json: async () => ({ message: "A link with this slug already exists." }),
+    });
+
+    // 409 is in revealServerMessage: a human-authored conflict message is
+    // actionable and is shown, always with the HTTP status appended.
+    await expect(apiRequest("POST", "/links")).rejects.toThrow(
+      "A link with this slug already exists.",
+    );
+    await expect(apiRequest("POST", "/links")).rejects.toThrow("HTTP 409");
+  });
+
   it("joins array validation messages (422) and shows the status", async () => {
     mockedGetApiKey.mockReturnValue("key");
     mockFetch.mockResolvedValue({

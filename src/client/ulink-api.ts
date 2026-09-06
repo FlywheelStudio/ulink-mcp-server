@@ -175,6 +175,13 @@ export async function apiRequest<T>(
     // table names, user ids, or stack traces. Either way the HTTP status is
     // always appended, so a real cause is never hidden behind a blanket
     // "Authentication failed" (which previously masked 400/403/404/5xx alike).
+    //
+    // 409 is the sharpest edge here: a NestJS ConflictException usually carries
+    // a clean "already exists" message, but if the API ever lets a raw Postgres
+    // driver string through (e.g. `duplicate key value violates unique
+    // constraint "users_email_key"`) this would relay the constraint/table name.
+    // That is an upstream API-hygiene concern the client can't detect; keep
+    // conflict messages human-authored on the API side.
     const revealServerMessage = new Set([400, 409, 422]);
     const base =
       revealServerMessage.has(res.status) && serverMessage
