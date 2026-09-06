@@ -137,28 +137,51 @@ export async function apiRequest<T>(
   }
 
   if (!res.ok) {
-    // Map status codes to safe messages to avoid leaking backend details
-    const safeMessages: Record<number, string> = {
+    // Per-status fallbacks, used when the server sends no usable message.
+    // These are safe hints, not the authoritative reason for the failure.
+    const fallbacks: Record<number, string> = {
       400: "Bad request",
-      401: "Authentication failed — please re-authenticate",
-      403: "Access denied — you don't have permission for this resource",
+      401: "Authentication failed — re-run the 'authenticate' tool to sign in again",
+      403: "Access denied — your account doesn't have permission for this resource",
       404: "Resource not found",
-      409: "Conflict — resource already exists",
+      409: "Conflict — the resource already exists",
       422: "Validation failed",
       429: "Too many requests — please slow down",
     };
 
-    let message = safeMessages[res.status] ?? `Request failed (${res.status})`;
+    // Read the server's own message when present. NestJS sends `message` as a
+    // string, or an array of strings for validation errors.
+    let serverMessage: string | undefined;
     try {
-      const errorBody = (await res.json()) as { message?: string };
-      // Only pass through validation messages (422) which help the user fix input
-      if (res.status === 422 && errorBody.message) {
-        message = errorBody.message;
+      const errorBody = (await res.json()) as { message?: unknown };
+      if (Array.isArray(errorBody?.message)) {
+        serverMessage = errorBody.message
+          .filter((m): m is string => typeof m === "string")
+          .join("; ");
+      } else if (typeof errorBody?.message === "string") {
+        serverMessage = errorBody.message;
+      }
+      if (serverMessage !== undefined && serverMessage.trim() === "") {
+        serverMessage = undefined;
       }
     } catch {
-      // ignore JSON parse failure — use safe message
+      // non-JSON body — fall back to the safe message
     }
-    throw new ApiError(res.status, message);
+
+    // Surface the server's message only for request-shape errors (400 bad
+    // request, 409 conflict, 422 validation) — these describe the caller's own
+    // input, so they are actionable and don't leak backend internals. Auth,
+    // not-found, rate-limit and 5xx stay generic so we never relay details like
+    // table names, user ids, or stack traces. Either way the HTTP status is
+    // always appended, so a real cause is never hidden behind a blanket
+    // "Authentication failed" (which previously masked 400/403/404/5xx alike).
+    const revealServerMessage = new Set([400, 409, 422]);
+    const base =
+      revealServerMessage.has(res.status) && serverMessage
+        ? serverMessage
+        : (fallbacks[res.status] ?? "Request failed");
+
+    throw new ApiError(res.status, `${base} (HTTP ${res.status})`);
   }
 
   return (await res.json()) as T;

@@ -281,7 +281,7 @@ describe("apiRequest", () => {
     );
   });
 
-  it("returns generic message for unknown status codes", async () => {
+  it("returns a generic message for 5xx and never leaks backend detail", async () => {
     mockedGetApiKey.mockReturnValue("key");
     mockFetch.mockResolvedValue({
       ok: false,
@@ -289,9 +289,64 @@ describe("apiRequest", () => {
       json: async () => ({ message: "NullPointerException at DatabaseService.java:42" }),
     });
 
-    await expect(apiRequest("GET", "/test")).rejects.toThrow(
-      "Request failed (500)",
+    await expect(apiRequest("GET", "/test")).rejects.toThrow("Request failed");
+
+    try {
+      await apiRequest("GET", "/test");
+    } catch (err) {
+      expect((err as InstanceType<typeof ApiError>).status).toBe(500);
+      // The server's 5xx message must not be surfaced.
+      expect((err as Error).message).not.toContain("NullPointerException");
+      // The status is always visible.
+      expect((err as Error).message).toContain("HTTP 500");
+    }
+  });
+
+  it("surfaces the server message for request-shape errors (400)", async () => {
+    mockedGetApiKey.mockReturnValue("key");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 400,
+      json: async () => ({ message: "Project ID is required." }),
+    });
+
+    // A 400 previously showed only "Bad request", masking the real cause.
+    await expect(apiRequest("GET", "/api-keys")).rejects.toThrow(
+      "Project ID is required.",
     );
+    await expect(apiRequest("GET", "/api-keys")).rejects.toThrow("HTTP 400");
+  });
+
+  it("joins array validation messages (422) and shows the status", async () => {
+    mockedGetApiKey.mockReturnValue("key");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 422,
+      json: async () => ({ message: ["name should not be empty", "name must be a string"] }),
+    });
+
+    await expect(apiRequest("POST", "/test")).rejects.toThrow(
+      "name should not be empty; name must be a string",
+    );
+  });
+
+  it("keeps a non-2xx status visible even when the message is generic (401)", async () => {
+    mockedGetApiKey.mockReturnValue("key");
+    mockFetch.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({ message: "JWT expired: token is no longer valid" }),
+    });
+
+    // Still generic (no backend detail), but the status is no longer hidden —
+    // so a 401 can be told apart from a 400/403 instead of all reading as
+    // "Authentication failed".
+    await expect(apiRequest("GET", "/test")).rejects.toThrow("HTTP 401");
+    try {
+      await apiRequest("GET", "/test");
+    } catch (err) {
+      expect((err as Error).message).not.toContain("JWT expired");
+    }
   });
 
   it("returns generic message when response body is not JSON", async () => {
@@ -304,8 +359,7 @@ describe("apiRequest", () => {
       },
     });
 
-    await expect(apiRequest("GET", "/test")).rejects.toThrow(
-      "Request failed (502)",
-    );
+    await expect(apiRequest("GET", "/test")).rejects.toThrow("Request failed");
+    await expect(apiRequest("GET", "/test")).rejects.toThrow("HTTP 502");
   });
 });
