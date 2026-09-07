@@ -1,9 +1,15 @@
 name: Publish to npm
 
+# Auto-publish on tag push is DISABLED. The NPM_TOKEN secret lacks @ulinkly
+# scope write, so every tag push failed with E404 and, worse, half-staged the
+# version on npm — which then blocked a manual re-publish with E409 (this is
+# what happened to 0.1.19). Until the token is rotated with @ulinkly publish
+# rights, cut releases manually:
+#   npm ci && npm publish --access public
+# When the token is fixed, re-enable by restoring the `push: tags: ["v*"]`
+# trigger below. workflow_dispatch lets you run it by hand in the meantime.
 on:
-  push:
-    tags:
-      - "v*"
+  workflow_dispatch:
 
 jobs:
   publish:
