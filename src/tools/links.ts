@@ -11,7 +11,7 @@ export function registerLinkTools(server: McpServer): void {
     {
       title: "Create Link",
       description:
-        "Create a new smart link in a ULink project. Supports unified links (single URL that routes by platform) and dynamic links (parameterised deep links). You must specify the project, domain, and link type. Optionally set platform-specific URLs, fallback URLs, custom slug, metadata, and parameters. Pass externalId (any stable string from your system) to make creation idempotent on (project, externalId).",
+        "Create a new smart link in a Ulinkly project. Supports unified links (single URL that routes by platform) and dynamic links (parameterised deep links). You must specify the project, domain, and link type. Optionally set platform-specific URLs, fallback URLs, custom slug, metadata, and parameters. Pass externalId (any stable string from your system) to make creation idempotent on (project, externalId).",
       inputSchema: {
         projectId: z.string().uuid().describe("The project to create the link in"),
         domainId: z.string().uuid().describe("The domain to host the link on"),
@@ -87,7 +87,7 @@ export function registerLinkTools(server: McpServer): void {
     {
       title: "List Links",
       description:
-        "List all links in a ULink project with optional pagination. Returns an array of link objects with their configuration, URLs, and metadata.",
+        "List all links in a Ulinkly project with optional pagination. Returns an array of link objects with their configuration, URLs, and metadata.",
       annotations: { readOnlyHint: true },
       inputSchema: {
         projectId: z.string().uuid().describe("The project whose links to list"),

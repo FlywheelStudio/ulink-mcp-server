@@ -11,7 +11,7 @@ export function registerDomainTools(server: McpServer): void {
     {
       title: "List Domains",
       description:
-        "List all domains associated with a ULink project, including shared domains and any custom domains that have been added. Shows verification status for each domain.",
+        "List all domains associated with a Ulinkly project, including shared domains and any custom domains that have been added. Shows verification status for each domain.",
       annotations: { readOnlyHint: true },
       inputSchema: {
         projectId: z.string().uuid().describe("The project whose domains to list"),
@@ -40,7 +40,7 @@ export function registerDomainTools(server: McpServer): void {
     {
       title: "Add Domain",
       description:
-        "Add a custom domain to a ULink project. After adding, you must configure DNS records and verify the domain before it can be used for links.",
+        "Add a custom domain to a Ulinkly project. After adding, you must configure DNS records and verify the domain before it can be used for links.",
       inputSchema: {
         projectId: z.string().uuid().describe("The project to add the domain to"),
         host: z
@@ -103,7 +103,7 @@ export function registerDomainTools(server: McpServer): void {
     {
       title: "Delete Domain",
       description:
-        "Remove a custom domain from a ULink project. Any links using this domain will stop working. This action is irreversible.",
+        "Remove a custom domain from a Ulinkly project. Any links using this domain will stop working. This action is irreversible.",
       annotations: { destructiveHint: true },
       inputSchema: {
         domainId: z.string().uuid().describe("The unique identifier of the domain to delete"),

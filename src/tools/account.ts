@@ -51,7 +51,7 @@ export function registerAccountTools(server: McpServer): void {
     {
       title: "List Plans",
       description:
-        "List all available ULink subscription plans with their features, limits, and pricing. Useful for comparing plans or determining upgrade options.",
+        "List all available Ulinkly subscription plans with their features, limits, and pricing. Useful for comparing plans or determining upgrade options.",
       annotations: { readOnlyHint: true },
       inputSchema: {
         billingPeriod: z
