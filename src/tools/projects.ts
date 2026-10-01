@@ -11,7 +11,7 @@ export function registerProjectTools(server: McpServer): void {
     {
       title: "List Projects",
       description:
-        "List all ULink projects owned by or shared with the authenticated user. Returns an array of project objects including id, name, slug, and default URL.",
+        "List all Ulinkly projects owned by or shared with the authenticated user. Returns an array of project objects including id, name, slug, and default URL.",
       annotations: { readOnlyHint: true },
     },
     async () => {
@@ -37,7 +37,7 @@ export function registerProjectTools(server: McpServer): void {
     {
       title: "Get Project",
       description:
-        "Retrieve detailed information about a specific ULink project by its ID, including configuration, domains, and membership details.",
+        "Retrieve detailed information about a specific Ulinkly project by its ID, including configuration, domains, and membership details.",
       annotations: { readOnlyHint: true },
       inputSchema: {
         projectId: z.string().uuid().describe("The unique identifier of the project"),
@@ -66,7 +66,7 @@ export function registerProjectTools(server: McpServer): void {
     {
       title: "Create Project",
       description:
-        "Create a new ULink project. A project is the top-level container for links, domains, and API keys. Requires a name and a default fallback URL.",
+        "Create a new Ulinkly project. A project is the top-level container for links, domains, and API keys. Requires a name and a default fallback URL.",
       inputSchema: {
         name: z.string().describe("Human-readable name for the project"),
         defaultUrl: z
@@ -99,7 +99,7 @@ export function registerProjectTools(server: McpServer): void {
     {
       title: "Update Project",
       description:
-        "Update the name and/or default URL of an existing ULink project. Only the fields you provide will be changed.",
+        "Update the name and/or default URL of an existing Ulinkly project. Only the fields you provide will be changed.",
       inputSchema: {
         projectId: z.string().uuid().describe("The unique identifier of the project to update"),
         name: z.string().optional().describe("New name for the project"),
@@ -133,7 +133,7 @@ export function registerProjectTools(server: McpServer): void {
     {
       title: "Configure Project",
       description:
-        "Update platform-specific configuration for a ULink project, such as iOS bundle identifier, Android package name, deeplink schemas, and SHA-256 fingerprints. These settings are used for deep link resolution on mobile platforms.",
+        "Update platform-specific configuration for a Ulinkly project, such as iOS bundle identifier, Android package name, deeplink schemas, and SHA-256 fingerprints. These settings are used for deep link resolution on mobile platforms.",
       inputSchema: {
         projectId: z.string().uuid().describe("The unique identifier of the project to configure"),
         androidPackageName: z

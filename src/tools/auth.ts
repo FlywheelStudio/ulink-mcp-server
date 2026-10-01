@@ -21,7 +21,7 @@ export function registerAuthTools(server: McpServer): void {
     {
       title: "Check Auth Status",
       description:
-        "Check whether valid ULink authentication credentials exist. Returns authentication state without triggering any login flow. Call this first to determine if the authenticate tool needs to be called.",
+        "Check whether valid Ulinkly authentication credentials exist. Returns authentication state without triggering any login flow. Call this first to determine if the authenticate tool needs to be called.",
       annotations: { readOnlyHint: true },
       inputSchema: {},
     },
@@ -81,7 +81,7 @@ export function registerAuthTools(server: McpServer): void {
             text: JSON.stringify({
               authenticated: false,
               message:
-                "Not authenticated. Call the 'authenticate' tool to sign in or create a free ULink account.",
+                "Not authenticated. Call the 'authenticate' tool to sign in or create a free Ulinkly account.",
             }),
           }],
         };
@@ -105,7 +105,7 @@ export function registerAuthTools(server: McpServer): void {
     {
       title: "Authenticate",
       description:
-        "Authenticate with ULink by opening a browser window for sign-in or sign-up. No existing account required — new users can create a free account during this flow. This is the first tool to call if check_auth_status reports no valid credentials. If a browser cannot be opened automatically, the response includes an 'authUrl' — present it to the user as a clickable link to open manually, then continue. After success, all other ULink tools become usable.",
+        "Authenticate with Ulinkly by opening a browser window for sign-in or sign-up. No existing account required — new users can create a free account during this flow. This is the first tool to call if check_auth_status reports no valid credentials. If a browser cannot be opened automatically, the response includes an 'authUrl' — present it to the user as a clickable link to open manually, then continue. After success, all other Ulinkly tools become usable.",
       annotations: { readOnlyHint: false },
       inputSchema: {},
     },
@@ -134,7 +134,7 @@ export function registerAuthTools(server: McpServer): void {
               text: JSON.stringify({
                 authenticated: true,
                 message:
-                  "Already authenticated with ULink. All tools are ready to use.",
+                  "Already authenticated with Ulinkly. All tools are ready to use.",
               }),
             }],
           };
@@ -205,7 +205,7 @@ export function registerAuthTools(server: McpServer): void {
             text: JSON.stringify({
               authenticated: true,
               message:
-                "Successfully authenticated with ULink. You can now use all ULink tools to manage projects, links, and domains.",
+                "Successfully authenticated with Ulinkly. You can now use all Ulinkly tools to manage projects, links, and domains.",
             }),
           }],
         };
@@ -230,7 +230,7 @@ export function registerAuthTools(server: McpServer): void {
     {
       title: "Get Onboarding Status",
       description:
-        "Get the onboarding progress for a ULink project, including which setup steps are complete and what to do next. Requires authentication. Use this after creating a project to guide users through setup.",
+        "Get the onboarding progress for a Ulinkly project, including which setup steps are complete and what to do next. Requires authentication. Use this after creating a project to guide users through setup.",
       annotations: { readOnlyHint: true },
       inputSchema: {
         projectId: z

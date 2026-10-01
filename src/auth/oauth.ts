@@ -41,7 +41,7 @@ function generateCodeChallenge(verifier: string): string {
 
 function successHtml(): string {
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>ULink CLI</title>
+<html><head><meta charset="utf-8"><title>Ulinkly CLI</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fafafa}
 .card{text-align:center;padding:2rem;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 h1{color:#22c55e;margin:0 0 .5rem}p{color:#555}</style></head>
@@ -61,7 +61,7 @@ function escapeHtml(text: string): string {
 
 function errorHtml(message: string): string {
   return `<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>ULink CLI — Error</title>
+<html><head><meta charset="utf-8"><title>Ulinkly CLI — Error</title>
 <style>body{font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#fafafa}
 .card{text-align:center;padding:2rem;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.08)}
 h1{color:#ef4444;margin:0 0 .5rem}p{color:#555}</style></head>

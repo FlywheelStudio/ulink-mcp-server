@@ -11,7 +11,7 @@ export function registerApiKeyTools(server: McpServer): void {
     {
       title: "List API Keys",
       description:
-        "List all API keys for a ULink project. API keys are used for server-side and SDK authentication. Returns key metadata (name, prefix, creation date) but never the full key value.",
+        "List all API keys for a Ulinkly project. API keys are used for server-side and SDK authentication. Returns key metadata (name, prefix, creation date) but never the full key value.",
       annotations: { readOnlyHint: true },
       inputSchema: {
         projectId: z.string().uuid().describe("The project whose API keys to list"),
@@ -43,7 +43,7 @@ export function registerApiKeyTools(server: McpServer): void {
     {
       title: "Create API Key",
       description:
-        "Create a new API key for a ULink project. The full key value is only returned once in the response and cannot be retrieved again. Store it securely.",
+        "Create a new API key for a Ulinkly project. The full key value is only returned once in the response and cannot be retrieved again. Store it securely.",
       inputSchema: {
         projectId: z.string().uuid().describe("The project to create the API key for"),
         name: z.string().describe("A descriptive name for the API key (e.g. 'Production Server')"),

@@ -1,8 +1,8 @@
-# ULink MCP Server
+# Ulinkly MCP Server
 
-> Connect your ULink deep linking projects to Claude Code, Cursor, Windsurf, and other AI assistants.
+> Connect your Ulinkly deep linking projects to Claude Code, Cursor, Windsurf, and other AI assistants.
 
-The [Model Context Protocol](https://modelcontextprotocol.io/introduction) (MCP) standardizes how Large Language Models (LLMs) talk to external services like ULink. It connects AI assistants directly with your ULink account and allows them to perform tasks like managing projects, creating smart links, configuring domains, and more. See the [full list of tools](#tools).
+The [Model Context Protocol](https://modelcontextprotocol.io/introduction) (MCP) standardizes how Large Language Models (LLMs) talk to external services like Ulinkly. It connects AI assistants directly with your Ulinkly account and allows them to perform tasks like managing projects, creating smart links, configuring domains, and more. See the [full list of tools](#tools).
 
 ## Setup
 
@@ -54,7 +54,7 @@ npx -y @ulinkly/mcp-server@latest
 
 ### 2. Authenticate
 
-The MCP server shares authentication with the [ULink CLI](https://github.com/ulinkly/ulink-cli). If you've already logged in via `ulink login`, the MCP server will use those tokens automatically — no extra login needed.
+The MCP server shares authentication with the [Ulinkly CLI](https://github.com/ulinkly/ulink-cli). If you've already logged in via `ulink login`, the MCP server will use those tokens automatically — no extra login needed.
 
 Otherwise, your MCP client will open a browser window for authentication on first use. Tokens are saved to `~/.ulink/config.json` and shared with the CLI. The session persists and tokens refresh automatically.
 
@@ -84,24 +84,24 @@ claude mcp add ulink -e ULINK_API_KEY=your-api-key -- npx -y @ulinkly/mcp-server
 }
 ```
 
-You can generate an API key from the ULink dashboard under **Project Settings > API Keys**, or by using the `create_api_key` tool.
+You can generate an API key from the Ulinkly dashboard under **Project Settings > API Keys**, or by using the `create_api_key` tool.
 
 ### 3. Start building
 
-Once connected, your AI assistant can manage your ULink projects directly. Try asking it to:
+Once connected, your AI assistant can manage your Ulinkly projects directly. Try asking it to:
 
-- "List my ULink projects"
+- "List my Ulinkly projects"
 - "Create a new smart link for my app"
 - "Show click analytics for my latest link"
 - "Add a custom domain to my project"
 
 ## Tools
 
-The following ULink tools are available to the LLM, organized by category.
+The following Ulinkly tools are available to the LLM, organized by category.
 
 #### Project Management
 
-- `list_projects`: Lists all ULink projects owned by or shared with the authenticated user.
+- `list_projects`: Lists all Ulinkly projects owned by or shared with the authenticated user.
 - `get_project`: Gets detailed information about a specific project, including configuration and membership.
 - `create_project`: Creates a new project with a name and default fallback URL.
 - `update_project`: Updates the name or default URL of an existing project.
@@ -153,7 +153,7 @@ Validation rules for passthrough parameters: keys must match `[A-Za-z0-9_-]{1,64
 
 ## Resources
 
-- [**ULink Documentation**](https://docs.ulink.ly): Learn more about ULink's deep linking platform.
+- [**Ulinkly Documentation**](https://docs.ulink.ly): Learn more about Ulinkly's deep linking platform.
 - [**Model Context Protocol**](https://modelcontextprotocol.io/introduction): Learn more about MCP and its capabilities.
 
 ## License
