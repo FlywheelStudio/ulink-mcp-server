@@ -60,7 +60,7 @@ describe("refreshAccessToken", () => {
         method: "POST",
         headers: expect.objectContaining({
           "Content-Type": "application/json",
-          apikey: expect.any(String),
+          apikey: expect.stringMatching(/^sb_publishable_/),
         }),
         body: JSON.stringify({ refresh_token: "old-refresh-token" }),
       }),
