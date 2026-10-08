@@ -230,8 +230,9 @@ export function browserOAuthFlow(
 export async function refreshAccessToken(
   refreshToken: string,
 ): Promise<OAuthTokens> {
-  const EMBEDDED_ANON_KEY =
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNqZ2loYXNzZnNzcHhpdmp0Z29pIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUwNjE0NTUsImV4cCI6MjA2MDYzNzQ1NX0._k-iNnobMaGN1qY8BGM4mMdnGRqOn1R90i_WXUn-Gpw";
+  // Supabase publishable key (public by design). Replaced the legacy JWT anon
+  // key, which Supabase is retiring; token refresh sends it as `apikey`.
+  const EMBEDDED_ANON_KEY = "sb_publishable_DeLGAeipTSnGxvAH3AdlZQ_eXNVNIvs";
   const anonKey = process.env.ULINK_SUPABASE_ANON_KEY ?? EMBEDDED_ANON_KEY;
 
   const url = `${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`;
