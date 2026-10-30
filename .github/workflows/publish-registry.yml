@@ -1,0 +1,28 @@
+name: Publish to MCP registry
+
+# Publishes server.json to registry.modelcontextprotocol.io. The
+# io.github.FlywheelStudio namespace needs org-level auth, which GitHub
+# Actions OIDC provides; the interactive `mcp-publisher login github` cannot.
+# Run by hand after bumping server.json to a version already on npm.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mcp-publisher v1.8.1
+        run: |
+          curl -sSL -o mcp-publisher.tgz https://github.com/modelcontextprotocol/registry/releases/download/v1.8.1/mcp-publisher_linux_amd64.tar.gz
+          echo "a06c9096dcb9727c13555b6be26c7effa707b01f06a4c561ba7a3635443cf2cc  mcp-publisher.tgz" | sha256sum -c -
+          tar xzf mcp-publisher.tgz mcp-publisher
+
+      - run: ./mcp-publisher login github-oidc
+
+      - run: ./mcp-publisher publish
