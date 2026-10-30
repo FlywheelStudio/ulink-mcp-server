@@ -1,6 +1,6 @@
 # Ulinkly MCP Server
 
-> Connect your Ulinkly deep linking projects to Claude Code, Cursor, Windsurf, and other AI assistants.
+> Connect your [Ulinkly](https://ulink.ly) deep linking projects to Claude Code, Cursor, Windsurf, and other AI assistants.
 
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) (MCP) standardizes how Large Language Models (LLMs) talk to external services like Ulinkly. It connects AI assistants directly with your Ulinkly account and allows them to perform tasks like managing projects, creating smart links, configuring domains, and more. See the [full list of tools](#tools).
 
@@ -154,6 +154,8 @@ Validation rules for passthrough parameters: keys must match `[A-Za-z0-9_-]{1,64
 ## Resources
 
 - [**Ulinkly Documentation**](https://docs.ulink.ly): Learn more about Ulinkly's deep linking platform.
+- [**AI-assisted setup**](https://docs.ulink.ly/getting-started/ai-setup): Use this server with the Ulinkly setup skill and CLI.
+- [**Migrating from Firebase Dynamic Links**](https://ulink.ly/migrate/firebase-dynamic-links): Move FDL links and app config to Ulinkly.
 - [**Model Context Protocol**](https://modelcontextprotocol.io/introduction): Learn more about MCP and its capabilities.
 
 ## License

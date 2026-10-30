@@ -3,6 +3,15 @@
   "version": "0.1.22",
   "mcpName": "io.github.FlywheelStudio/ulink",
   "description": "Ulinkly MCP Server — Model Context Protocol server for the Ulinkly REST API",
+  "homepage": "https://ulink.ly",
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "deep-linking",
+    "universal-links",
+    "app-links",
+    "ulinkly"
+  ],
   "type": "module",
   "bin": {
     "ulink-mcp-server": "./dist/index.js"
