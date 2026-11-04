@@ -33,7 +33,7 @@ Open **Settings > MCP > Add new MCP server**, or add to `.cursor/mcp.json`:
 
 **Windsurf:**
 
-Open **Settings > MCP > Add new MCP server**, or add to `~/.windsurf/mcp.json`:
+Open **Settings > MCP > Add new MCP server**, or add to `~/.codeium/windsurf/mcp_config.json`:
 
 ```json
 {

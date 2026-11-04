@@ -7,7 +7,7 @@ vi.mock("../../client/ulink-api.js", () => ({
 }));
 
 import { apiRequest } from "../../client/ulink-api.js";
-import { registerDomainTools } from "../domains.js";
+import { registerDomainTools, inferDomainType } from "../domains.js";
 
 const mockedApiRequest = vi.mocked(apiRequest);
 
@@ -52,8 +52,17 @@ describe("Domain tools", () => {
   // add_domain
   // ---------------------------------------------------------------------------
   describe("add_domain", () => {
-    it("calls POST /domains with projectId and host", async () => {
-      const newDomain = { id: "d2", host: "go.example.com" };
+    it("infers type 'custom' for a non-shared.ly host and lists DNS records", async () => {
+      const newDomain = {
+        id: "d2",
+        host: "go.example.com",
+        type: "custom",
+        verified: false,
+        recommended_dns_record: { type: "CNAME", name: "go", value: "cname.vercel-dns.com" },
+        vercel_verification: [
+          { type: "TXT", domain: "_vercel.example.com", value: "vc-domain-verify=abc", reason: "pending" },
+        ],
+      };
       mockedApiRequest.mockResolvedValue(newDomain);
 
       const handler = getHandler("add_domain");
@@ -65,8 +74,51 @@ describe("Domain tools", () => {
       expect(mockedApiRequest).toHaveBeenCalledWith("POST", "/domains", {
         projectId: "p1",
         host: "go.example.com",
+        type: "custom",
+      });
+      const text = result.content[0].text;
+      expect(text).toContain("CNAME  go  ->  cname.vercel-dns.com");
+      expect(text).toContain("TXT  _vercel.example.com  ->  vc-domain-verify=abc");
+      expect(text).toContain("verify_domain with domainId d2");
+      expect(text).toContain(JSON.stringify(newDomain, null, 2));
+    });
+
+    it("falls back to cname_target / a_records when no recommended record", async () => {
+      mockedApiRequest.mockResolvedValue({ id: "d3", host: "example.com", a_records: ["76.76.21.21"] });
+      const handler = getHandler("add_domain");
+      const result = await handler({ projectId: "p1", host: "example.com" });
+      expect(result.content[0].text).toContain("A  @  ->  76.76.21.21");
+
+      mockedApiRequest.mockResolvedValue({ id: "d4", host: "l.example.com", cname_target: "custom-domains.ulink.ly" });
+      const result2 = await handler({ projectId: "p1", host: "l.example.com" });
+      expect(result2.content[0].text).toContain("CNAME  l.example.com  ->  custom-domains.ulink.ly");
+    });
+
+    it("infers type 'shared' for a *.shared.ly host and sends the full host", async () => {
+      const newDomain = { id: "d5", host: "myapp.shared.ly", type: "shared", verified: true };
+      mockedApiRequest.mockResolvedValue(newDomain);
+
+      const handler = getHandler("add_domain");
+      const result = await handler({ projectId: "p1", host: "MyApp.Shared.ly" });
+
+      expect(mockedApiRequest).toHaveBeenCalledWith("POST", "/domains", {
+        projectId: "p1",
+        host: "MyApp.Shared.ly",
+        type: "shared",
       });
       expect(result.content[0].text).toBe(JSON.stringify(newDomain, null, 2));
+    });
+
+    it("respects an explicit type over inference", async () => {
+      mockedApiRequest.mockResolvedValue({ id: "d6" });
+      const handler = getHandler("add_domain");
+      await handler({ projectId: "p1", host: "links.example.com", type: "shared" });
+
+      expect(mockedApiRequest).toHaveBeenCalledWith("POST", "/domains", {
+        projectId: "p1",
+        host: "links.example.com",
+        type: "shared",
+      });
     });
 
     it("returns error on failure", async () => {
@@ -182,4 +234,16 @@ describe("add_domain hostname validation", () => {
       expect(() => hostnameSchema.parse(hostname)).toThrow();
     });
   }
+});
+
+describe("inferDomainType", () => {
+  it.each([
+    ["acme.shared.ly", "shared"],
+    ["ACME.SHARED.LY", "shared"],
+    ["links.example.com", "custom"],
+    ["shared.ly.example.com", "custom"],
+    ["notshared.ly", "custom"],
+  ])("%s -> %s", (host, expected) => {
+    expect(inferDomainType(host)).toBe(expected);
+  });
 });
