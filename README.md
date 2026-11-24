@@ -2,6 +2,8 @@
 
 > Connect your [Ulinkly](https://ulink.ly) deep linking projects to Claude Code, Cursor, Windsurf, and other AI assistants.
 
+[![FlywheelStudio/ulink-mcp-server MCP server](https://glama.ai/mcp/servers/FlywheelStudio/ulink-mcp-server/badges/score.svg)](https://glama.ai/mcp/servers/FlywheelStudio/ulink-mcp-server)
+
 The [Model Context Protocol](https://modelcontextprotocol.io/introduction) (MCP) standardizes how Large Language Models (LLMs) talk to external services like Ulinkly. It connects AI assistants directly with your Ulinkly account and allows them to perform tasks like managing projects, creating smart links, configuring domains, and more. See the [full list of tools](#tools).
 
 ## Setup
